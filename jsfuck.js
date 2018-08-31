@@ -8,19 +8,19 @@
 
   const SIMPLE = {
     'false':      '![]',
-    'true':       '!![]',
-    'undefined':  '[][[]]',
-    'NaN':        '+[![]]',
-    'Infinity':   '+(+!+[]+(!+[]+[])[!+[]+!+[]+!+[]]+[+!+[]]+[+[]]+[+[]]+[+[]])' // +"1e1000"
+    'true':       '!0',
+    'undefined':  '0[0]',
+    'NaN':        '+[!0]',
+    'Infinity':   '+(+!0+(!0+[])[!0+!0+!0]+[+!0]+[0]+[0]+[0])' // +"1e1000"
   };
 
   const CONSTRUCTORS = {
     'Array':    '[]',
-    'Number':   '(+[])',
+    'Number':   '(+0)',
     'String':   '([]+[])',
-    'Boolean':  '(![])',
+    'Boolean':  '(!0)',
     'Function': '[]["fill"]',
-    'RegExp':   'Function("return/"+false+"/")()'
+    'RegExp':   'Function("return/"+0+"/")()'
   };
 
   const MAPPING = {
@@ -126,13 +126,12 @@
   function fillMissingDigits(){
     var output, number, i;
 
-    for (number = 0; number < 10; number++){
+    MAPPING[0] = "[0]";
+    MAPPING[1] = "[+!0]";
 
-      output = "+[]";
-
-      if (number > 0){ output = "+!" + output; }
-      for (i = 1; i < number; i++){ output = "+!+[]" + output; }
-      if (number > 1){ output = output.substr(1); }
+    for (number = 2; number < 10; number++){
+      output = "!0";
+      for (i = 1; i < number; i++){ output += "+!0"; }
 
       MAPPING[number] = "[" + output + "]";
     }
@@ -153,13 +152,18 @@
     function numberReplacer(_,y) {
       var values = y.split("");
       var head = +(values.shift());
-      var output = "+[]";
+      var output;
 
-      if (head > 0){ output = "+!" + output; }
-      for (i = 1; i < head; i++){ output = "+!+[]" + output; }
-      if (head > 1){ output = output.substr(1); }
+      if (head === 0) {
+        output = "0";
+      } else if (head === 1) {
+        output = "+!0";
+      } else {
+        output = "!0";
+        for (i = 1; i < head; i++){ output += "+!0"; }
+      }
 
-      return [output].concat(values).join("+").replace(/(\d)/g, digitReplacer);
+      return output + "+" + values.join("+").replace(/(\d)/g, digitReplacer);
     }
 
     for (i = MIN; i <= MAX; i++){
@@ -189,7 +193,7 @@
   }
 
   function replaceStrings(){
-    var regEx = /[^\[\]\(\)\!\+]{1}/g,
+    var regEx = /[^\[\]()!+0]/g,
       all, value, missing,
       count = MAX - MIN;
 
@@ -220,7 +224,7 @@
     }
 
     for (all in MAPPING){
-      MAPPING[all] = MAPPING[all].replace(/\"([^\"]+)\"/gi, mappingReplacer);
+      MAPPING[all] = MAPPING[all].replace(/"([^"]+)"/gi, mappingReplacer);
     }
 
     while (findMissing()){

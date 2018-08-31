@@ -45,3 +45,7 @@ createTest('abcdefghijklmnopqrstuvwxyz');
 for(var i=MIN; i<MAX ;i++) {
 	createTest(String.fromCharCode(i));
 }
+
+createTest("1234567890");
+createTest("12345+67890");
+createTest("for(x='',i=0;++i<101;x+=i%5?f||i:f+'Buzz')f=i%3?'':'Fizz';x");
